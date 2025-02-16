@@ -1,0 +1,13 @@
+{
+    "project": {
+        "name": "excelGO",
+        "desc": "一款轻量化excel数据处理工具",
+        "width": 650,
+        "height": 750,
+        "theme": "litera",
+        "resizable": false,
+        "icon": "",
+        "home_logo": "resources\\icon\\home.PNG",
+        "notebook_theme": "primary"
+    }
+}
