@@ -1,5 +1,4 @@
 @echo off
-setlocal enabledelayedexpansion
 
 echo [INFO] Starting build process...
 if not exist excelGO.spec (

@@ -1,0 +1,4 @@
+{
+    "insert_lower": "insert into {table_name} ({columns}) values ();\r\n",
+    "insert_upper": "INSERT INTO {table_name} ({columns}) VALUES ();\r\n"
+}

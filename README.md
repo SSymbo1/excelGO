@@ -36,3 +36,16 @@ init
 ``` bash
 build
 ```
+
+### 生成requirements.txt
+
+运行项目根目录下的requirements.bat（windows）
+``` bash
+requirements
+```
+
+### Q&A
+
+#### 1.运行.bat时报错,无法初始化项目/打包/生成requirements.txt:
+  
+保证项目工程结构完整的情况下，如果Windows的cmd控制台有输出乱码迹象，请进入对应的.bat脚本将行尾序列修改为 **CRLF**

@@ -8,6 +8,31 @@
         "resizable": false,
         "icon": "",
         "home_logo": "resources\\icon\\home.PNG",
-        "notebook_theme": "primary"
+        "exract_icon": "resources\\icon\\save.png",
+        "notebook_theme": "primary",
+        "site": "https://github.com/SSymbo1/excelGO/releases",
+        "default_extract": "INSERT",
+        "exract_options": [
+            "INSERT",
+            "UPDATE"
+        ],
+        "default_extract_config": "数字自增",
+        "extract_config": [
+            "数字自增",
+            "字母自增",
+            "表格取值",
+            "自定义"
+        ],
+        "extract_config_table": [
+            "列名",
+            "取值方式",
+            "取值"
+        ]
+    },
+    "extract": {
+        "export_path": "",
+        "sql_case": "lower",
+        "header_column": 1,
+        "data_column": 2
     }
 }
