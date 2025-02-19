@@ -1,8 +1,8 @@
 import ttkbootstrap as ttk
-from ttkbootstrap.dialogs import dialogs
 import util.file as file
 import random
 from job.dump import Dump
+from util.notice import Notice
 
 
 # 提取为sql界面
@@ -102,25 +102,27 @@ class Extract(ttk.Frame):
     # 选择文件按钮
     def __user_select_file(self):
         self.__excel_path = file.load_file(
-            "选择表格文件,注意:选择数据表格会清空之前的配置信息!",
+            "选择表格文件,注意:打开这个界面会清空之前的配置信息!",
             [("Excel", "*.xlsx"), ("Excel", "*.xls")],
         )
         if self.__excel_path != "" and self.__excel_path is not None:
             self.__dump = Dump(self.__excel_path, self.__config["extract"])
-        if self.__dump:
+        if self.__dump and self.__excel_path != "":
             self.__excel_headers = self.__dump.get_data_header()
-            dialogs.Messagebox.show_info(
-                title="提示", message="表格加载成功!", parent=self
-            )
+            Notice("提示", "表格加载成功!", container=self).show_message_box()
         self.__extract_config = []
         self.__dynamic_rander_table()
+
+    # 提取设置按钮
+    def __set_extract_config(self):
+        pass
 
     # 新增配置按钮
     def __add_config(self):
         if self.__excel_path == "" or self.__excel_path is None:
-            dialogs.Messagebox.show_error(
-                title="错误", message="请先选择表格文件", parent=self
-            )
+            Notice(
+                "错误", "请先选择表格文件!", "error", container=self
+            ).show_message_box()
         else:
             operation = self.__selected_option.get()
             self.__config_window = ttk.Toplevel(self)
@@ -142,7 +144,11 @@ class Extract(ttk.Frame):
             dump_type = ttk.Label(self.__form_frame, text="取值方式:", font=("", 12))
             dump_type.grid(row=1, column=0, padx=(30, 0), pady=(10, 0))
             self.__dump_type_combobox = ttk.Combobox(
-                self.__form_frame, bootstyle="primary", width=18, name="dump_type"
+                self.__form_frame,
+                bootstyle="primary",
+                width=18,
+                name="dump_type",
+                state="readonly",
             )
             self.__dump_type_combobox["values"] = self.__config["project"][
                 "extract_config"
@@ -179,19 +185,17 @@ class Extract(ttk.Frame):
     def __delete_config(self):
         result = ""
         if self.__delete_index == "":
-            result = dialogs.Messagebox.show_question(
-                title="提示",
-                message="当前未选中配置行,是否删除全部配置?",
-                buttons=["删除所有配置:danger", "否:secondary"],
-                parent=self,
-            )
+            result = Notice(
+                "提示",
+                "当前未选中配置行,请先选中配置行",
+                container=self,
+            ).show_judge_box(["删除所有配置:danger", "否:secondary"])
         else:
-            result = dialogs.Messagebox.show_question(
-                title="提示",
-                message="是否删除已选择数据?或删除全部配置?",
-                buttons=["是:primary", "否:secondary", "删除所有配置:danger"],
-                parent=self,
-            )
+            result = Notice(
+                "提示",
+                "是否删除已选择数据?或删除全部配置?",
+                container=self,
+            ).show_judge_box(["是:primary", "否:secondary", "删除所有配置:danger"])
         if result == "是":
             filter_config = [
                 config
@@ -211,28 +215,36 @@ class Extract(ttk.Frame):
                 table_name = child.get()
                 break
         if self.__excel_path == "" or self.__excel_path is None:
-            dialogs.Messagebox.show_error(
-                title="错误", message="请先选择表格文件", parent=self
-            )
+            Notice("错误", "请先选择表格文件", "error", self).show_message_box()
         elif self.__extract_config.__len__() == 0:
-            dialogs.Messagebox.show_error(
-                title="错误", message="请先添加配置", parent=self
-            )
+            Notice("错误", "请先添加配置", "error", self).show_message_box()
         elif table_name == "":
-            dialogs.Messagebox.show_error(
-                title="错误", message="请先输入操作表名", parent=self
-            )
+            Notice("错误", "请先输入操作表名", "error", self).show_message_box()
+        elif not any(
+            config.get("dump_type") == self.__config["project"]["extract_config"][2]
+            for config in self.__extract_config
+        ):
+            Notice(
+                "错误",
+                "必须添加一项取值方式为:'表格取值'的配置项作为索引配置",
+                "error",
+                self,
+            ).show_message_box()
         else:
-            result = dialogs.Messagebox.show_question(
-                title="提示",
-                message="确定导出数据?",
-                buttons=["是:primary", "否:secondary"],
-            )
+            result = Notice(
+                "提示",
+                "确定导出数据?",
+                container=self,
+            ).show_judge_box(["是:primary", "否:secondary"])
             if result == "是":
                 dump = Dump(self.__excel_path, self.__config["extract"])
-                dump.dump_sql(
+                dump_result = dump.dump_sql(
                     self.__extract_config, table_name, self.__selected_option.get()
                 )
+                if dump_result:
+                    Notice(
+                        "提示", f"导出成功,位置为:{dump_result}", container=self
+                    ).show_message_box()
 
     # 动态配置组件
     def __dyniamic_config_component(self, event):
@@ -299,11 +311,19 @@ class Extract(ttk.Frame):
                 and custom_config["dump_value"] == ""
             )
         ):
-            dialogs.Messagebox.show_error(
-                title="错误",
-                message="配置项存在空值项,不能保存!",
-                parent=self.__config_window,
-            )
+            Notice(
+                "错误", "配置项存在空值项,不能保存!", "error", self.__config_window
+            ).show_message_box()
+        elif any(
+            config.get("column_name") == custom_config["column_name"]
+            for config in self.__extract_config
+        ):
+            Notice(
+                "错误",
+                "已保存的配置项中存在重复的列名,请重新配置!",
+                "error",
+                self.__config_window,
+            ).show_message_box()
         else:
             # 保存配置并关闭配置窗口,更新配置表格
             custom_config["index"] = "".join(

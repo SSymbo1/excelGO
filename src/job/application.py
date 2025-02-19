@@ -1,5 +1,6 @@
 import ttkbootstrap as ttk
 import util.path as path
+import util.file as file
 import json
 from page.home import Home
 from page.setting import Setting
@@ -15,6 +16,8 @@ class Application:
             path.get_resource_path("resources\config.json"), "r", encoding="utf-8"
         ) as cf:
             self.__config = json.load(cf)
+        # 初始化默认导出文件目录
+        file.init_dump_folder()
         # 初始化主界面
         self.__root = ttk.Window(
             title=self.__config["project"]["name"],

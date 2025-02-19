@@ -30,8 +30,11 @@
         ]
     },
     "extract": {
-        "export_path": "",
+        "default_name": "dump_excel_{timestamp}.sql",
+        "export_path": "export",
         "sql_case": "lower",
+        "auto_number": 0,
+        "auto_character": "a",
         "header_column": 1,
         "data_column": 2
     }
