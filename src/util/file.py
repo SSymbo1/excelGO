@@ -4,9 +4,15 @@ import util.path as path
 import time
 import os
 
+
 # 加载文件（获取文件路径）
 def load_file(title_name, types):
     return filedialog.askopenfilename(title=title_name, filetypes=types)
+
+
+# 加载文件夹（获取文件夹路径）
+def load_folder_path(title_name, parent_window):
+    return filedialog.askdirectory(title=title_name, parent=parent_window)
 
 
 # 初始化导出文件夹
@@ -32,9 +38,9 @@ def load_image_file(image_path: str, is_round: bool, width: int, height: int):
 def dump_file(config: dict, content: str):
     dump_file_name = config["default_name"].format(timestamp=int(time.time() * 1000))
     with open(
-        f"{config['export_path']}\\{dump_file_name}",
+        f"{config['export_path']}/{dump_file_name}",
         "w",
         encoding="utf-8",
     ) as file:
         file.write(content)
-    return f"{config['export_path']}\\{dump_file_name}"
+    return f"{config['export_path']}/{dump_file_name}"

@@ -3,6 +3,7 @@ import util.path as path
 import util.file as file
 import json
 
+
 # 数据sql提取
 class Dump:
     def __init__(self, file_path, config):
@@ -52,7 +53,9 @@ class Dump:
     def __insert_dump(self, sql_config):
         sql_template = ""
         # 获取sql模板
-        with open(path.get_resource_path("resources\\template.json")) as t:
+        with open(
+            path.get_resource_path("resources\\template.json"), encoding="utf-8"
+        ) as t:
             template = json.load(t)
             if sql_config["config"]["sql_case"] == "lower":
                 sql_template = template["insert_lower"]
@@ -113,8 +116,7 @@ class Dump:
                     continue
             auto_number += 1
             auto_character += 1
-            sql = sql.format(*target_value)
-            dump_sql += sql
+            dump_sql += sql.format(*target_value)
         return file.dump_file(sql_config["config"], dump_sql)
 
     # UPDATE语句生成导出

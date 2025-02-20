@@ -13,7 +13,7 @@ class Application:
     def __init__(self):
         # 读取配置文件
         with open(
-            path.get_resource_path("resources\config.json"), "r", encoding="utf-8"
+            path.get_resource_path("resources\\config.json"), "r", encoding="utf-8"
         ) as cf:
             self.__config = json.load(cf)
         # 初始化默认导出文件目录
@@ -30,7 +30,7 @@ class Application:
                 self.__config["project"]["resizable"],
                 self.__config["project"]["resizable"],
             ),
-            iconphoto=self.__config["project"]["icon"],
+            iconphoto=path.get_resource_path(self.__config["project"]["icon"]),
         )
         # 主容器
         self.__container = ttk.Frame(self.__root)

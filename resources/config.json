@@ -1,13 +1,13 @@
 {
     "project": {
         "name": "excelGO",
-        "desc": "一款轻量化excel数据处理工具",
+        "desc": "一款简单的excel数据处理工具",
         "width": 650,
         "height": 750,
         "theme": "litera",
         "resizable": false,
-        "icon": "",
-        "home_logo": "resources\\icon\\home.PNG",
+        "icon": "resources\\icon\\favicon.ico",
+        "home_logo": "resources\\icon\\home.png",
         "exract_icon": "resources\\icon\\save.png",
         "notebook_theme": "primary",
         "site": "https://github.com/SSymbo1/excelGO/releases",

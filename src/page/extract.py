@@ -1,6 +1,8 @@
 import ttkbootstrap as ttk
 import util.file as file
+import util.path as path
 import random
+import json
 from job.dump import Dump
 from util.notice import Notice
 
@@ -13,6 +15,7 @@ class Extract(ttk.Frame):
         self.__extract_config = []
         self.__delete_index: str = ""
         self.__config_window = None
+        self.__dump_config_window = None
         self.__dump = None
         self.__excel_headers = []
         self.__config = config
@@ -59,6 +62,7 @@ class Extract(ttk.Frame):
             self.__file_grid,
             text="提取设置",
             bootstyle="primary-outline",
+            command=self.__set_extract_config,
         ).grid(row=0, column=3, padx=(10, 0), pady=(10, 0))
         # 表名输入框
         ttk.Label(
@@ -99,25 +103,110 @@ class Extract(ttk.Frame):
             command=self.__dump_data,
         ).grid(row=3, column=0, pady=(10, 0))
 
-    # 选择文件按钮
-    def __user_select_file(self):
-        self.__excel_path = file.load_file(
-            "选择表格文件,注意:打开这个界面会清空之前的配置信息!",
-            [("Excel", "*.xlsx"), ("Excel", "*.xls")],
-        )
-        if self.__excel_path != "" and self.__excel_path is not None:
-            self.__dump = Dump(self.__excel_path, self.__config["extract"])
-        if self.__dump and self.__excel_path != "":
-            self.__excel_headers = self.__dump.get_data_header()
-            Notice("提示", "表格加载成功!", container=self).show_message_box()
-        self.__extract_config = []
-        self.__dynamic_rander_table()
-
-    # 提取设置按钮
+    # 提取设置按钮(窗口)
     def __set_extract_config(self):
-        pass
+        self.__dump_config_window = ttk.Toplevel(self)
+        self.__dump_config_window.title("提取设置")
+        self.__dump_config_window.geometry("500x600")
+        self.__dump_config_window.resizable(False, False)
+        self.__dump_config_window.place_window_center()
+        # 表单布局初始化
+        self.__dump_form_frame = ttk.Frame(self.__dump_config_window)
+        self.__dump_form_frame.pack(padx=20, pady=20, fill="x", anchor="center")
+        # 导出文件名
+        ttk.Label(self.__dump_form_frame, text="导出文件:", font=("", 12)).grid(
+            row=0, column=0, padx=(30, 0), pady=(10, 0)
+        )
+        file_name = ttk.Entry(
+            self.__dump_form_frame, bootstyle="primary", name="file_name", width=25
+        )
+        file_name.insert(0, self.__config["extract"]["default_name"])
+        file_name.grid(row=0, column=1, padx=(10, 0), pady=(10, 0))
+        # 导出路径
+        ttk.Label(self.__dump_form_frame, text="导出路径:", font=("", 12)).grid(
+            row=1, column=0, padx=(30, 0), pady=(10, 0)
+        )
+        self.__file_name = ttk.Entry(
+            self.__dump_form_frame,
+            bootstyle="primary",
+            name="file_path",
+            width=25,
+        )
+        self.__file_name.insert(0, self.__config["extract"]["export_path"])
+        self.__file_name.grid(row=1, column=1, padx=(10, 0), pady=(10, 0))
+        ttk.Button(
+            self.__dump_form_frame, text="选择路径", command=self.__user_select_path
+        ).grid(row=2, column=1, pady=(10, 0))
+        # SQL格式
+        ttk.Label(self.__dump_form_frame, text="SQL格式:", font=("", 12)).grid(
+            row=3, column=0, padx=(30, 0), pady=(10, 0)
+        )
+        combobox = ttk.Combobox(
+            self.__dump_form_frame,
+            bootstyle="primary",
+            width=23,
+            state="readonly",
+            name="dump_sql_case",
+        )
+        combobox["values"] = ["lower", "upper"]
+        combobox.set("lower")
+        combobox.grid(row=3, column=1, padx=(10, 0), pady=(10, 0))
+        # 数字自增起始
+        ttk.Label(self.__dump_form_frame, text="数字起始:", font=("", 12)).grid(
+            row=4, column=0, padx=(30, 0), pady=(10, 0)
+        )
+        auto_number = ttk.Entry(
+            self.__dump_form_frame,
+            bootstyle="primary",
+            name="auto_number",
+            width=25,
+        )
+        auto_number.insert(0, self.__config["extract"]["auto_number"])
+        auto_number.grid(row=4, column=1, padx=(10, 0), pady=(10, 0))
+        # 字母自增起始
+        ttk.Label(self.__dump_form_frame, text="字母起始:", font=("", 12)).grid(
+            row=5, column=0, padx=(30, 0), pady=(10, 0)
+        )
+        auto_character = ttk.Entry(
+            self.__dump_form_frame,
+            bootstyle="primary",
+            name="auto_character",
+            width=25,
+        )
+        auto_character.insert(0, self.__config["extract"]["auto_character"])
+        auto_character.grid(row=5, column=1, padx=(10, 0), pady=(10, 0))
+        # 表头起始
+        ttk.Label(self.__dump_form_frame, text="  表头行:", font=("", 12)).grid(
+            row=6, column=0, padx=(30, 0), pady=(10, 0)
+        )
+        header = ttk.Entry(
+            self.__dump_form_frame,
+            bootstyle="primary",
+            name="dump_header",
+            width=25,
+        )
+        header.insert(0, self.__config["extract"]["header_column"])
+        header.grid(row=6, column=1, padx=(10, 0), pady=(10, 0))
+        # 数据起始
+        ttk.Label(self.__dump_form_frame, text="  数据行:", font=("", 12)).grid(
+            row=7, column=0, padx=(30, 0), pady=(10, 0)
+        )
+        data = ttk.Entry(
+            self.__dump_form_frame,
+            bootstyle="primary",
+            name="dump_data",
+            width=25,
+        )
+        data.insert(0, self.__config["extract"]["data_column"])
+        data.grid(row=7, column=1, padx=(10, 0), pady=(10, 0))
+        ttk.Button(
+            self.__dump_form_frame,
+            text="保存",
+            bootstyle="primary-outline",
+            command=self.__colse_dump_config_window,
+        ).grid(row=8, column=1, pady=(20, 0))
 
-    # 新增配置按钮
+    # 新增配置按钮(窗口)
     def __add_config(self):
         if self.__excel_path == "" or self.__excel_path is None:
             Notice(
@@ -134,15 +223,16 @@ class Extract(ttk.Frame):
             self.__form_frame = ttk.Frame(self.__config_window)
             self.__form_frame.pack(padx=20, pady=20, fill="x", anchor="center")
             # 导出列名
-            column_name = ttk.Label(self.__form_frame, text="导出列名:", font=("", 12))
-            column_name.grid(row=0, column=0, padx=(30, 0), pady=(10, 0))
-            column_name_entry = ttk.Entry(
-                self.__form_frame, bootstyle="primary", name="column_name"
+            ttk.Label(self.__form_frame, text="导出列名:", font=("", 12)).grid(
+                row=0, column=0, padx=(30, 0), pady=(10, 0)
             )
-            column_name_entry.grid(row=0, column=1, padx=(10, 0), pady=(10, 0))
+            ttk.Entry(self.__form_frame, bootstyle="primary", name="column_name").grid(
+                row=0, column=1, padx=(10, 0), pady=(10, 0)
+            )
             # 取值方式
-            dump_type = ttk.Label(self.__form_frame, text="取值方式:", font=("", 12))
-            dump_type.grid(row=1, column=0, padx=(30, 0), pady=(10, 0))
+            ttk.Label(self.__form_frame, text="取值方式:", font=("", 12)).grid(
+                row=1, column=0, padx=(30, 0), pady=(10, 0)
+            )
             self.__dump_type_combobox = ttk.Combobox(
                 self.__form_frame,
                 bootstyle="primary",
@@ -162,8 +252,9 @@ class Extract(ttk.Frame):
             )
             self.__dump_type_combobox.grid(row=1, column=1, padx=(10, 0), pady=(10, 0))
             # 取值
-            dump_value = ttk.Label(self.__form_frame, text="导出取值:", font=("", 12))
-            dump_value.grid(row=2, column=0, padx=(30, 0), pady=(10, 0))
+            ttk.Label(self.__form_frame, text="导出取值:", font=("", 12)).grid(
+                row=2, column=0, padx=(30, 0), pady=(10, 0)
+            )
             self.__dump_value_entry = ttk.Entry(
                 self.__form_frame,
                 bootstyle="primary",
@@ -180,6 +271,20 @@ class Extract(ttk.Frame):
                 bootstyle="primary-outline",
                 command=self.__close_config_window,
             ).grid(row=3, column=2, padx=(5, 0), pady=(20, 0))
+
+    # 选择文件按钮
+    def __user_select_file(self):
+        self.__excel_path = file.load_file(
+            "选择表格文件,注意:打开这个界面会清空之前的配置信息!",
+            [("Excel", "*.xlsx"), ("Excel", "*.xls")],
+        )
+        if self.__excel_path != "" and self.__excel_path is not None:
+            self.__dump = Dump(self.__excel_path, self.__config["extract"])
+        if self.__dump and self.__excel_path != "":
+            self.__excel_headers = self.__dump.get_data_header()
+            Notice("提示", "表格加载成功!", container=self).show_message_box()
+        self.__extract_config = []
+        self.__dynamic_rander_table()
 
     # 删除配置按钮
     def __delete_config(self):
@@ -241,10 +346,9 @@ class Extract(ttk.Frame):
                 dump_result = dump.dump_sql(
                     self.__extract_config, table_name, self.__selected_option.get()
                 )
-                if dump_result:
-                    Notice(
-                        "提示", f"导出成功,位置为:{dump_result}", container=self
-                    ).show_message_box()
+                Notice(
+                    "提示", f"导出成功,位置为:{dump_result}", container=self
+                ).show_message_box()
 
     # 动态配置组件
     def __dyniamic_config_component(self, event):
@@ -265,11 +369,11 @@ class Extract(ttk.Frame):
             )
             entry.grid(row=2, column=1, padx=(10, 0), pady=(10, 0))
         elif dump_type_selected == self.__config["project"]["extract_config"][2]:
-            # todo 从数据列表格取数据列
             combobox = ttk.Combobox(
                 self.__form_frame,
                 bootstyle="primary",
                 width=18,
+                state="readonly",
                 name="dynamic_component",
             )
             combobox["values"] = self.__excel_headers
@@ -331,6 +435,85 @@ class Extract(ttk.Frame):
             )  # 生成配置索引
             self.__extract_config.append(custom_config)
             self.__dynamic_rander_table()
+
+    # 保存并关闭提取设置窗口
+    def __colse_dump_config_window(self):
+        config = self.__config["extract"]
+        format_error = False
+        collect_change = False
+        old_header = config["header_column"]
+        old_data = config["data_column"]
+        for child in self.__dump_form_frame.winfo_children():
+            try:
+                if child.winfo_name() == "file_name":
+                    config["default_name"] = child.get()
+                    continue
+                elif child.winfo_name() == "file_path":
+                    config["export_path"] = child.get()
+                    continue
+                elif child.winfo_name() == "dump_sql_case":
+                    config["sql_case"] = child.get()
+                    continue
+                elif child.winfo_name() == "auto_number":
+                    config["auto_number"] = int(child.get())
+                    continue
+                elif child.winfo_name() == "dump_header":
+                    config["header_column"] = int(child.get())
+                    if old_header != config["header_column"]:
+                        collect_change = True
+                    continue
+                elif child.winfo_name() == "dump_data":
+                    config["data_column"] = int(child.get())
+                    if old_data != config["data_column"]:
+                        collect_change = True
+                    continue
+                elif child.winfo_name() == "auto_character":
+                    config["auto_character"] = child.get()
+                    continue
+            except:
+                format_error = True
+                continue
+        if [key for key, value in config.items() if value == "" or value is None]:
+            Notice(
+                "错误", "存在空值项,不能保存!", "error", self.__dump_config_window
+            ).show_message_box()
+        elif format_error:
+            Notice(
+                "错误",
+                "应输入数字项输入了非数字,不能保存!",
+                "error",
+                self.__dump_config_window,
+            ).show_message_box()
+        elif not config["auto_character"].isalpha():
+            Notice(
+                "错误",
+                "字母起始只能为字母a~z或A~Z,不能保存!",
+                "error",
+                self.__dump_config_window,
+            ).show_message_box()
+        else:
+            self.__config["extract"] = config
+            with open(
+                path.get_resource_path("resources\\config.json"), "w", encoding="utf-8"
+            ) as f:
+                json.dump(self.__config, f, indent=4, ensure_ascii=False)
+            if (
+                self.__excel_path != "" or self.__excel_path is not None
+            ) and collect_change:
+                self.__dump = Dump(self.__excel_path, self.__config["extract"])
+                self.__excel_headers = self.__dump.get_data_header()
+            Notice(
+                "提示", "保存成功!", container=self.__dump_config_window
+            ).show_message_box()
+            self.__dump_config_window.destroy()
+
+    # 选择导出路径
+    def __user_select_path(self):
+        export_path = file.load_folder_path("选择导出路径", self.__dump_config_window)
+        if export_path:
+            self.__file_name.delete(0, "end")
+
+            self.__file_name.insert(0, export_path)
 
     # 监听选中配置表格其中一行
     def __select_config_column(self, event):

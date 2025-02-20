@@ -1,7 +1,7 @@
 <div align="center">
     <h1>excelGO
 </h1>
-    <img src="resources\icon\home.PNG" width="100" align="center" />
+    <img src="resources\icon\logo.png" width="100" align="center" />
     <br/> <br/>
     <strong>简单的excel数据处理工具</strong>
 </div>
